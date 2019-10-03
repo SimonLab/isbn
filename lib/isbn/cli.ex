@@ -15,6 +15,7 @@ defmodule ISBN.CLI do
     try do
       isbn
       |> String.to_integer()
+      |> Integer.digits()
       |> validate_isbn()
     rescue
       _ -> :help
@@ -25,15 +26,9 @@ defmodule ISBN.CLI do
 
   # Check isbn length is 10 or 13
   # returns isbn or :help if not valid
-  def validate_isbn(isbn) do
-    digits = Integer.digits(isbn)
+  def validate_isbn(isbn) when not (length(isbn) == 10 or length(isbn) == 13), do: :help
 
-    if length(digits) == 10 or length(digits) == 13 do
-      isbn
-    else
-      :help
-    end
-  end
+  def validate_isbn(isbn), do: Integer.undigits(isbn)
 
   def process(:help) do
     IO.puts("""
