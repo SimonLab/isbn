@@ -1,38 +1,52 @@
 defmodule ISBN.CLI do
-  def main(argv) do
-    parse_args(argv)
-  end
+  @moduledoc """
+  Parse command line arguments.
+  """
 
-  def parse_args(argv) do
+  @doc """
+  Process isbn argument
+  """
+  def main(argv) do
     argv
-    |> OptionParser.parse(switches: [help: :boolean], aliases: [h: :help])
-    |> elem(1)
-    |> args_to_internal_representation()
+    |> parse_args()
     |> process()
   end
 
-  def args_to_internal_representation([isbn]) do
-    try do
+  @doc """
+  Returs :help or isbn
+  """
+  def parse_args(argv) do
+    argv
+    |> OptionParser.parse(
+      switches: [help: :boolean, isbn: :integer],
+      aliases: [h: :help, i: :isbn]
+    )
+    |> elem(0)
+    |> args_to_isbn()
+    |> validate_isbn()
+  end
+
+  defp args_to_isbn(isbn: isbn), do: isbn
+  defp args_to_isbn(_), do: nil
+
+  def valid_isbn?(isbn) when is_integer(isbn) do
+    digits = Integer.digits(isbn)
+    length(digits) == 10 or length(digits) == 13
+  end
+
+  def valid_isbn?(_), do: false
+
+  defp validate_isbn(isbn) do
+    if valid_isbn?(isbn) do
       isbn
-      |> String.to_integer()
-      |> Integer.digits()
-      |> validate_isbn()
-    rescue
-      _ -> :help
+    else
+      :help
     end
   end
 
-  def args_to_internal_representation(_), do: :help
-
-  # Check isbn length is 10 or 13
-  # returns isbn or :help if not valid
-  def validate_isbn(isbn) when not (length(isbn) == 10 or length(isbn) == 13), do: :help
-
-  def validate_isbn(isbn), do: Integer.undigits(isbn)
-
   def process(:help) do
     IO.puts("""
-    usage: isbn <isbn>
+    usage: isbn --isbn <isbn>
     """)
 
     System.halt(0)
